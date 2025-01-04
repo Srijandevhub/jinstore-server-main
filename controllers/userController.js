@@ -1,0 +1,71 @@
+const User = require('../models/userModel');
+const Cart = require('../models/cartModel');
+const Wishlist = require('../models/wishlistModel');
+const Billingaddress = require('../models/billingaddressModel');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const registerUser = async (req, res) => {
+    try {
+        const { username, email, password, cart, wishlist } = req.body;
+        const userExists = await User.findOne({ $or: [ { username: username }, { email: email } ] });
+        if (userExists) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!regex.test(password)) {
+            return res.status(400).json({ message: "The password should be 8 characters long & should have atleast one capital letter, one number, & one special character" });
+        }
+        const cartArr = cart ? JSON.parse(cart) : [];
+        const wishlistArr = wishlist ? JSON.parse(wishlist) : [];
+        const hashedpassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username: username, email: email, password: hashedpassword });
+        const newCart = new Cart({ userid: newUser._id, products: cartArr });
+        const newWishlist = new Wishlist({ userid: newUser._id, products: wishlistArr });
+        newUser.cartid = newCart._id;
+        newUser.wishlistid = newWishlist._id;
+        const newBillingaddress = new Billingaddress({ userid: newUser._id, email: email });
+        newUser.billingaddressid = newBillingaddress._id;
+        await newUser.save();
+        await newCart.save();
+        await newWishlist.save();
+        await newBillingaddress.save();
+        res.status(200).json({ message: "User registered", user: newUser });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+const loginUser = async (req, res) => {
+    try {
+        const { identifier, password, rememberme } = req.body;
+        //console.log(identifier, password, rememberme);
+        const user = await User.findOne({ $or: [ { username: identifier }, { email: identifier } ] });
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+        const matchPassword = bcrypt.compare(password, user.password);
+        if (!matchPassword) {
+            return res.status(400).json({ message: "Wrong password!" });
+        }
+        const usertoken = jwt.sign({ userid: user._id, cartid: user.cartid, wishlistid: user.wishlistid, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const refreshtoken = jwt.sign({ userid: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+        res.cookie("jinstoreuser", usertoken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+        if (rememberme) {
+            res.cookie("jinstorerefresh", refreshtoken, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        }
+        res.status(200).json({ message: "User loggedin" });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+const getLoggedinUser = async (req, res) => {
+    try {
+        
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+module.exports = { registerUser, loginUser };
