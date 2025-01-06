@@ -39,7 +39,6 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { identifier, password, rememberme } = req.body;
-        //console.log(identifier, password, rememberme);
         const user = await User.findOne({ $or: [ { username: identifier }, { email: identifier } ] });
         if (!user) {
             return res.status(400).json({ message: "User not found" });
@@ -48,13 +47,13 @@ const loginUser = async (req, res) => {
         if (!matchPassword) {
             return res.status(400).json({ message: "Wrong password!" });
         }
-        const usertoken = jwt.sign({ userid: user._id, cartid: user.cartid, wishlistid: user.wishlistid, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const usertoken = jwt.sign({ userid: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const refreshtoken = jwt.sign({ userid: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
         res.cookie("jinstoreuser", usertoken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
         if (rememberme) {
             res.cookie("jinstorerefresh", refreshtoken, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
         }
-        res.status(200).json({ message: "User loggedin" });
+        res.status(200).json({ message: "User loggedin", user: user });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
@@ -62,10 +61,33 @@ const loginUser = async (req, res) => {
 
 const getLoggedinUser = async (req, res) => {
     try {
-        
+        const userid = req.user.userid;
+        const user = await User.findById(userid).select("-password");
+        if (!user) {
+            return res.status(400).json({ message: "User not found!" });
+        }
+        res.status(200).json({ message: "User fetched", user: user });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 }
 
-module.exports = { registerUser, loginUser };
+const adminAuthProtected = async (req, res) => {
+    try {
+        res.status(200).json({ message: "Admin authenticated" });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie("jinstoreuser");
+        res.clearCookie("jinstorerefresh");
+        res.status(200).json({ message: "User loggedout" });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+module.exports = { registerUser, loginUser, getLoggedinUser, adminAuthProtected, logoutUser };
