@@ -17,4 +17,19 @@ const categorystorage = multer.diskStorage({
 
 const categoryUpload = multer({ storage: categorystorage });
 
-module.exports = { categoryUpload };
+const productStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const productDir = path.join(__dirname, "../uploads/products");
+        if (!fs.existsSync(productDir)) {
+            fs.mkdir(productDir);
+        }
+        cb(null, productDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname));
+    }
+});
+
+const productUpload = multer({ storage: productStorage })
+
+module.exports = { categoryUpload, productUpload };
