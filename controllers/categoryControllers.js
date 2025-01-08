@@ -72,6 +72,11 @@ const updateCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
+        const category = await Category.findById(id);
+        const filePath = path.join(__dirname, "../uploads/categories", category.thumbnail);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
         const deletedCategory = await Category.findByIdAndDelete(id);
         res.status(200).json({ message: "Category deleted", category: deletedCategory });
     } catch (error) {

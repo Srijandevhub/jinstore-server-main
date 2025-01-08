@@ -16,6 +16,7 @@ databaseConfig(url);
 
 app.use("/api/v1/user", require('./routes/userRoutes'));
 app.use("/api/v1/category", require('./routes/categoryRoutes'));
+app.use("/api/v1/banner", require("./routes/bannerRoutes"));
 
 app.listen(port, () => {
     console.log(`Server started at ${port}`);
