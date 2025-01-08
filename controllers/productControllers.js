@@ -83,5 +83,4 @@ const getProductslimited = async (req, res) => {
     }
 }
 
-
 module.exports = { addProduct, getProduct, getProducts, deleteProduct, getProductslimited };

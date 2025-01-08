@@ -18,6 +18,7 @@ app.use("/api/v1/user", require('./routes/userRoutes'));
 app.use("/api/v1/category", require('./routes/categoryRoutes'));
 app.use("/api/v1/brand", require('./routes/brandRoutes'));
 app.use("/api/v1/product", require('./routes/productRoutes'));
+app.use("/api/v1/wishlist", require('./routes/wishlistRoutes'));
 
 app.listen(port, () => {
     console.log(`Server started at ${port}`);

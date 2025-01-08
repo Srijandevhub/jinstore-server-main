@@ -38,7 +38,7 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { identifier, password, rememberme } = req.body;
+        const { identifier, password, rememberme, wishlist, cart } = req.body;
         const user = await User.findOne({ $or: [ { username: identifier }, { email: identifier } ] });
         if (!user) {
             return res.status(400).json({ message: "User not found" });
@@ -46,6 +46,20 @@ const loginUser = async (req, res) => {
         const matchPassword = bcrypt.compare(password, user.password);
         if (!matchPassword) {
             return res.status(400).json({ message: "Wrong password!" });
+        }
+        if (wishlist) {
+            const wishlistExisting = await Wishlist.findById(user.wishlistid);
+            const wishlistArr = JSON.parse(wishlist);
+            await Wishlist.findByIdAndUpdate(user.wishlistid, {
+                products: [...wishlistExisting.products, ...wishlistArr]
+            });
+        }
+        if (cart) {
+            const cartExisting = await Cart.findById(user.cartid);
+            const cartArr = JSON.parse(cart);
+            await Cart.findByIdAndUpdate(user.cartid, {
+                products: [...cartExisting.products, ...cartArr]
+            });
         }
         const usertoken = jwt.sign({ userid: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const refreshtoken = jwt.sign({ userid: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
