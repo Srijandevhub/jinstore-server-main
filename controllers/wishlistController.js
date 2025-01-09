@@ -77,7 +77,8 @@ const getWishlistProducts = async (req, res) => {
                 title: product.title,
                 thumbnail: product.thumbnail,
                 price: product.price,
-                discount: product.discount
+                discount: product.discount,
+                stock: product.stock
             }
         });
         res.status(200).json({ message: "Wishlist fetched", wishlist: wishlistDetails });
@@ -86,4 +87,25 @@ const getWishlistProducts = async (req, res) => {
     }
 }
 
-module.exports = { getWishlist, addProductToWishlist, removeProductFromWishlist, clearWishlist, getWishlistProducts };
+const getWishlistProductsNonAuth = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        const idArr = ids ? JSON.parse(ids) : [];
+        const products = await Product.find({ _id: { $in: idArr } });
+        const wishlistDetails = products.map((product) => {
+            return {
+                productid: product._id,
+                title: product.title,
+                thumbnail: product.thumbnail,
+                price: product.price,
+                discount: product.discount,
+                stock: product.stock
+            }
+        });
+        res.status(200).json({ message: "Wishlist fetched", wishlist: wishlistDetails });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
+
+module.exports = { getWishlist, addProductToWishlist, removeProductFromWishlist, clearWishlist, getWishlistProducts, getWishlistProductsNonAuth };

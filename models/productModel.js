@@ -19,6 +19,7 @@ const productSchema = new mongoose.Schema({
     thumbnail: { type: String },
     images:  [ { type: String } ],
     categoryid: { type: mongoose.Schema.Types.ObjectId, ref: 'categories' },
+    stock: { type: Number, default: 10 },
     reviews: [reviewSchema]
 }, { timestamps: true })
 
