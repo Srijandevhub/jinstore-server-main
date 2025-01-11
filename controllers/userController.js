@@ -39,7 +39,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { identifier, password, rememberme, wishlist, cart } = req.body;
-        const user = await User.findOne({ $or: [ { username: identifier }, { email: identifier } ] }).select("-shippingdetailsids	-orderids -cartid -wishlistid -billingaddressid");
+        const user = await User.findOne({ $or: [ { username: identifier }, { email: identifier } ] });
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }

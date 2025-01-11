@@ -39,7 +39,7 @@ const removeProductFromWishlist = async (req, res) => {
         if (!wishlist) {
             return res.status(400).json({ message: "Wishlist not found" });
         }
-        const filterProducts = wishlist.products.filter(product => product !== productid);
+        const filterProducts = wishlist.products.filter(product => product.toString() !== productid.toString());
         const updatedWishlist = await Wishlist.findByIdAndUpdate(wishlist._id, {
             products: filterProducts
         });
