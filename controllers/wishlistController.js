@@ -24,7 +24,7 @@ const addProductToWishlist = async (req, res) => {
         wishlist.products.push(productid);
         const updatedWishlist = await Wishlist.findByIdAndUpdate(wishlist._id, {
             products: wishlist.products
-        });
+        }, { new: true });
         res.status(200).json({ message: "Product added", wishlist: updatedWishlist });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error });
@@ -42,7 +42,7 @@ const removeProductFromWishlist = async (req, res) => {
         const filterProducts = wishlist.products.filter(product => product.toString() !== productid.toString());
         const updatedWishlist = await Wishlist.findByIdAndUpdate(wishlist._id, {
             products: filterProducts
-        });
+        }, { new: true });
         res.status(200).json({ message: "Product removed", wishlist: updatedWishlist });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error });

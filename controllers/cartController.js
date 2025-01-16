@@ -23,7 +23,7 @@ const addProductToCart = async (req, res) => {
         });
         const updatedCart = await Cart.findByIdAndUpdate(cart._id, {
             products: cart.products
-        });
+        }, { new: true });
         res.status(200).json({ message: "Product added", cart: updatedCart });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
@@ -35,10 +35,10 @@ const removeProductFromCart = async (req, res) => {
         const { productid } = req.body;
         const userid = req.user.userid;
         const cart = await Cart.findOne({ userid: userid });
-        const filteredCart = cart.products.filter(product => product.productid !== productid);
+        const filteredCart = cart.products.filter(product => product.productid.toString() !== productid.toString());
         const updatedCart = await Cart.findByIdAndUpdate(cart._id, {
             products: filteredCart
-        });
+        }, { new: true });
         res.status(200).json({ message: "Product removed", cart: updatedCart });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
@@ -50,10 +50,10 @@ const updateQuantity = async (req, res) => {
         const { productid, quantity } = req.body;
         const userid = req.user.userid;
         const cart = await Cart.findOne({ userid: userid });
-        cart.products.find(product => product.productid === productid).quantity = quantity;
+        cart.products.find(product => product.productid.toString() === productid.toString()).quantity = quantity;
         const updatedCart = await Cart.findByIdAndUpdate(cart._id, {
             products: cart.products
-        });
+        }, { new: true });
         res.status(200).json({ message: "Quantity", cart: updatedCart });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
@@ -91,7 +91,19 @@ const getCartProductsFromAuth = async (req, res) => {
                 stock: product.stock
             }
         });
-        res.status(200).json({ message: "Cart products fetched", cart: cartDetails });
+        let grandTotal = 0;
+        cartDetails.forEach((el) => {
+            if (el.discount > 0) {
+                const price = el.price - (el.price * (el.discount / 100));
+                grandTotal += price * el.quantity;
+            } else {
+                grandTotal += el.price * el.quantity;
+            }
+        });
+        await Cart.findByIdAndUpdate(cart._id, {
+            grandtotal: grandTotal
+        });
+        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
@@ -100,7 +112,7 @@ const getCartProductsFromAuth = async (req, res) => {
 const getProductsFromNonAuth = async (req, res) => {
     try {
         const { products } = req.body;
-        const productsArr = ids ? JSON.parse(ids) : [];
+        const productsArr = products ? JSON.parse(products) : [];
         const idArr = productsArr.map(product => product.productid);
         const productsFind = await Product.find({ _id: { $in: idArr } });
         const cartDetails = productsArr.map((item) => {
@@ -114,8 +126,17 @@ const getProductsFromNonAuth = async (req, res) => {
                 discount: product.discount,
                 stock: product.stock
             }
-        })
-        res.status(200).json({ message: "Cart products fetched", cart: cartDetails });
+        });
+        let grandTotal = 0;
+        cartDetails.forEach((el) => {
+            if (el.discount > 0) {
+                const price = el.price - (el.price * (el.discount / 100));
+                grandTotal += price;
+            } else {
+                grandTotal += el.price
+            }
+        });
+        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
