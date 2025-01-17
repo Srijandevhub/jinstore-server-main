@@ -61,7 +61,7 @@ const loginUser = async (req, res) => {
                 products: [...cartExisting.products, ...cartArr]
             });
         }
-        const usertoken = jwt.sign({ userid: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const usertoken = jwt.sign({ userid: user._id, role: user.role, billingaddressid: user.billingaddressid }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const refreshtoken = jwt.sign({ userid: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
         res.cookie("jinstoreuser", usertoken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
         if (rememberme) {

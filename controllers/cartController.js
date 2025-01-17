@@ -101,9 +101,9 @@ const getCartProductsFromAuth = async (req, res) => {
             }
         });
         await Cart.findByIdAndUpdate(cart._id, {
-            grandtotal: grandTotal
+            grandtotal: grandTotal.toFixed(2)
         });
-        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal });
+        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal.toFixed(2) });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
@@ -131,12 +131,12 @@ const getProductsFromNonAuth = async (req, res) => {
         cartDetails.forEach((el) => {
             if (el.discount > 0) {
                 const price = el.price - (el.price * (el.discount / 100));
-                grandTotal += price;
+                grandTotal += price * el.quantity;
             } else {
-                grandTotal += el.price
+                grandTotal += el.price * el.quantity;
             }
         });
-        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal });
+        res.status(200).json({ message: "Cart products fetched", cart: cartDetails, grandtotal: grandTotal.toFixed(2) });
     } catch (error) {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }

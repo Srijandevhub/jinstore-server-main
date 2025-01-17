@@ -52,7 +52,7 @@ const adminAuth = (req, res, next) => {
                 if (getUser.role !== 'admin') {
                     return res.status(403).json({ message: "Access denied" });
                 }
-                const newUserToken = jwt.sign({ userid: getUser._id, role: getUser.role }, secret, { expiresIn: '1d' });
+                const newUserToken = jwt.sign({ userid: getUser._id, role: getUser.role, billingaddressid: getUser.billingaddressid }, secret, { expiresIn: '1d' });
                 res.cookie(" jinstoreuser",newUserToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
                 next();
             })
